@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f5;
+        }
+        img {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .llama-chat {
+            margin-top: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #fff;
+            max-width: 600px;
+        }
+        button {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            background-color: #4a90e2;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="section">
+        <h1>Extracted Information</h1>
+        <p><strong>Name:</strong> {{ name }}</p>
+        <p><strong>Aadhaar Number:</strong> {{ aadhaar_number }}</p>
+        {% if annotated_image %}
+            <img src="{{ annotated_image }}" width="400"><br><br>
+        {% endif %}
+    </div>
+
+    <div class="section llama-chat">
+        <h2>Ask LLaMA 3 in English:</h2>
+        <form id="llama-form">
+            <textarea name="user_prompt" id="user_prompt" rows="4" placeholder="Ask LLaMA 3 something..." required></textarea>
+            <br><br>
+            <button type="submit">Send to LLaMA 3</button>
+        </form>
+        <div style="margin-top:20px;">
+            <h3>LLaMA 3 Response:</h3>
+            <p id="llama-response">Waiting for input...</p>
+            <audio id="llamaAudio" controls></audio>
+        </div>
+    </div>
+
+    <div class="section llama-chat">
+        <h2>Ask in Regional Language:</h2>
+        <form id="llama-local-form">
+            <textarea name="regional_prompt" id="regional_prompt" rows="4" placeholder="अपने क्षेत्रीय भाषा में LLaMA से पूछें..." required></textarea>
+            <br><br>
+            <button type="submit">Send to LLaMA 3 (Regional)</button>
+        </form>
+        <div style="margin-top:20px;">
+            <h3>Regional Response:</h3>
+            <p id="regional-response">Waiting for input...</p>
+            <audio id="regionalAudio" controls></audio>
+        </div>
+    </div>
+
+    <!-- jQuery for AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- English Chat -->
+    <script>
+        $(document).ready(function () {
+            $('#llama-form').on('submit', function (e) {
+                e.preventDefault();
+                const prompt = $('#user_prompt').val();
+
+                $('#llama-response').text("🧠 LLaMA 3 is thinking...");
+
+                $.ajax({
+                    url: '/chat_llama',
+                    method: 'POST',
+                    data: { user_prompt: prompt },
+                    success: function (response) {
+                        $('#llama-response').text(response.llama_response);
+                        if (response.audio_url) {
+                            const audio = document.getElementById("llamaAudio");
+                            audio.src = response.audio_url;
+                            audio.play();
+                        }
+                    },
+                    error: function () {
+                        $('#llama-response').text("❌ Failed to get response from LLaMA 3.");
+                    }
+                });
+            });
+
+            // Regional chat
+            $('#llama-local-form').on('submit', function (e) {
+                e.preventDefault();
+                const prompt = $('#regional_prompt').val();
+
+                $('#regional-response').text("🧠 Thinking...");
+
+                $.ajax({
+                    url: '/chat_llama_regional',
+                    method: 'POST',
+                    data: { regional_prompt: prompt },
+                    success: function (response) {
+                        $('#regional-response').text(response.llama_response);
+                        if (response.audio_url) {
+                            const audio = document.getElementById("regionalAudio");
+                            audio.src = response.audio_url;
+                            audio.play();
+                        }
+                    },
+                    error: function () {
+                        $('#regional-response').text("❌ Failed to get regional response.");
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
